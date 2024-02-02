@@ -1,5 +1,6 @@
 package springjdbc.repository;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import springjdbc.domain.Member;
 
@@ -12,8 +13,12 @@ public class MemberRepositoryV0Test {
     @Test
     void crud() throws SQLException{
         //save
-        Member member = new Member("리얼테스트임",999999999);
+        Member member = new Member("방꾸미기",1);
         repository.save(member);
+
+        //findById
+        Member findMember = repository.findById(member.getMemberId());
+        Assertions.assertThat(member).isEqualTo(findMember);
 
 
     }
