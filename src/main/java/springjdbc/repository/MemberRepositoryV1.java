@@ -1,16 +1,31 @@
 package springjdbc.repository;
 
-//JDBC - DriverManager 사용
+
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.support.JdbcUtils;
 import springjdbc.connection.DBConnectionUtil;
 import springjdbc.domain.Member;
 
+import javax.sql.DataSource;
 import java.sql.*;
 import java.util.NoSuchElementException;
 
+
+//JDBC - DataSource 사용
 @Slf4j
-public class MemberRepositoryV0 {
+public class MemberRepositoryV1 {
+
+    private final DataSource dataSource;
+
+    //의존관계주입
+    public MemberRepositoryV1(DataSource dataSource){
+        this.dataSource = dataSource;
+    }
+
+
+
+
     public Member save(Member member) throws SQLException{
         String sql = "insert into member(member_id, money) values (?,?)";
 
@@ -18,7 +33,7 @@ public class MemberRepositoryV0 {
         PreparedStatement pstmt = null;
 
         try {
-            con = DBConnectionUtil.getConnection();
+            con = getConnection();
             pstmt = con.prepareStatement(sql);
             pstmt.setString(1, member.getMemberId());
             pstmt.setInt(2, member.getMoney());
@@ -38,7 +53,7 @@ public class MemberRepositoryV0 {
         ResultSet rs = null;
 
         try {
-            con = DBConnectionUtil.getConnection();
+            con = getConnection();
             pstmt = con.prepareStatement(sql);
             pstmt.setString(1, memberId);
 
@@ -66,7 +81,7 @@ public class MemberRepositoryV0 {
         PreparedStatement pstmt = null;
 
         try {
-            con = DBConnectionUtil.getConnection();
+            con = getConnection();
             pstmt = con.prepareStatement(sql);
             pstmt.setInt(1, money);
             pstmt.setString(2, memberId);
@@ -84,7 +99,7 @@ public class MemberRepositoryV0 {
         PreparedStatement pstmt = null;
 
         try {
-            con = DBConnectionUtil.getConnection();
+            con = getConnection();
             pstmt = con.prepareStatement(sql);
             pstmt.setString(1, memberId);
 
@@ -96,29 +111,16 @@ public class MemberRepositoryV0 {
         }
     }
 
-
     public void close(Connection con, Statement pstmt, ResultSet rs) {
-        if (rs != null) {
-            try {
-                rs.close();
-            } catch (SQLException e) {
-                log.info("error", e);
-            }
-        }
-        if (pstmt!=null) {
-            try {
-                pstmt.close();
-            } catch (SQLException e) {
-                log.info("error", e);
-            }
-        }
-        if (con!=null) {
-            try {
-                con.close();
-            } catch (SQLException e) {
-                log.info("error", e);
-            }
-        }
+        JdbcUtils.closeResultSet(rs);
+        JdbcUtils.closeStatement(pstmt);
+        JdbcUtils.closeConnection(con);
+    }
+
+    private Connection getConnection() throws SQLException{
+        Connection con = dataSource.getConnection();
+        log.info("get connection={},class={}", con, con.getClass());
+        return con;
     }
 
 
